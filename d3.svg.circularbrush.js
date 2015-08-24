@@ -79,6 +79,14 @@ _brushG.selectAll("path.resize")
 		return this
 	}
 
+	_circularbrush.arc = function(_value) {
+		if (!arguments.length) return _arc;
+
+		_arc = _value;
+		return this
+
+	}
+
     d3.rebind(_circularbrush, _circularbrushDispatch, "on");
 
 	return _circularbrush;
