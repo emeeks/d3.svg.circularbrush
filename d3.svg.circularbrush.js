@@ -55,6 +55,11 @@ _brushG.selectAll("path.resize")
 		if (!arguments.length) return _handleSize;
 
 		_handleSize = _value;
+		_brushData = [
+		{startAngle: _extent[0], endAngle: _extent[1], class: "extent"},
+		{startAngle: _extent[0] - _handleSize, endAngle:  _extent[0], class: "resize e"},
+		{startAngle: _extent[1], endAngle: _extent[1] + _handleSize, class: "resize w"}
+		];
 		return this
 	}
 
