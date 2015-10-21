@@ -1,6 +1,6 @@
 {
   "name": "d3-svg-circularbrush",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A circular selector for cyclical data.",
   "main": "index.js",
   "keywords": [

@@ -13,26 +13,29 @@ module.exports = function() {
   var _brushG;
   var _handleSize = .2;
   var _scale = d3.scale.linear().domain(_extent).range(_extent);
+  var _tolerance = 0.00001;
 
   function _circularbrush(_container) {
+
+    updateBrushData();
 
     _brushG = _container
     .append("g")
     .attr("class", "circularbrush");
 
-_brushG
-.selectAll("path.circularbrush")
-.data(_brushData)
-.enter()
-.insert("path", "path.resize")
-.attr("d", _arc)
-.attr("class", function(d) {return d.class + " circularbrush"})
+    _brushG
+    .selectAll("path.circularbrush")
+    .data(_brushData)
+    .enter()
+    .insert("path", "path.resize")
+    .attr("d", _arc)
+    .attr("class", function(d) {return d.class + " circularbrush"})
 
-_brushG.select("path.extent")
-.on("mousedown.brush", resizeDown)
+    _brushG.select("path.extent")
+    .on("mousedown.brush", resizeDown)
 
-_brushG.selectAll("path.resize")
-.on("mousedown.brush", resizeDown)
+    _brushG.selectAll("path.resize")
+    .on("mousedown.brush", resizeDown)
 
     return _circularbrush;
   }
@@ -48,6 +51,7 @@ _brushG.selectAll("path.resize")
     if (!arguments.length) return [_actualScale(_extent[0]),_actualScale(_extent[1])];
 
     _extent = [_scale.invert(_value[0]),_scale.invert(_value[1])];
+
     return this
   }
 
@@ -92,6 +96,48 @@ _brushG.selectAll("path.resize")
 
   }
 
+  _circularbrush.tolerance = function(_value) {
+    if (!arguments.length) return _tolerance;
+
+    _tolerance = _value;
+    return this
+  }
+
+  _circularbrush.filter = function(_array, _accessor) {
+    var data = _array.map(_accessor);
+
+    var extent = _circularbrush.extent();
+    var start = extent[0];
+    var end = extent[1];
+    var firstPoint = _scale.range()[0];
+    var lastPoint = _scale.range()[1];
+    var filteredArray = [];
+    var firstHalf = [];
+    var secondHalf = [];
+
+    if (Math.abs(start - end) < _tolerance) {
+      return _array;
+    }
+
+      if (start < end) {
+        filteredArray = _array.filter(function (d) {
+          return _accessor(d) >= start && _accessor(d) <= end;
+        });
+      }
+      else {
+        var firstHalf = _array.filter(function (d) {
+           return (_accessor(d) >= start && _accessor(d) <= lastPoint);
+        });
+        var secondHalf = _array.filter(function (d) {
+           return (_accessor(d) <= end && _accessor(d) >= firstPoint);
+        });
+      filteredArray = firstHalf.concat(secondHalf);
+      }
+
+    return filteredArray;
+
+  }
+
     d3.rebind(_circularbrush, _circularbrushDispatch, "on");
 
   return _circularbrush;
@@ -111,7 +157,7 @@ _brushG.selectAll("path.resize")
     else if (d.class == "resize w") {
       d3_window
       .on("mousemove.brush", function() {resizeMove("w")})
-      .on("mouseup.brush", extentUp);     
+      .on("mouseup.brush", extentUp);
     }
     else {
       d3_window
@@ -139,7 +185,7 @@ _brushG.selectAll("path.resize")
       }
 
       var _newStartAngle = clampedAngle;
-      var _newEndAngle = _originalBrushData.endAngle;     
+      var _newEndAngle = _originalBrushData.endAngle;
     }
     else if (_resize == "w") {
       var clampedAngle = Math.min(Math.max(_originalBrushData.endAngle + (_current - _start), _originalBrushData.startAngle), _originalBrushData.startAngle + (2 * Math.PI))
@@ -166,11 +212,7 @@ _brushG.selectAll("path.resize")
     {startAngle: _newEndAngle, endAngle: _newEndAngle + _handleSize, class: "resize w"}
     ]
 
-
-    _brushG
-      .selectAll("path.circularbrush")
-      .data(_newBrushData)
-      .attr("d", _arc)
+    brushRefresh();
 
     if (_newStartAngle > (Math.PI * 2)) {
       _newStartAngle = (_newStartAngle - (Math.PI * 2));
@@ -192,6 +234,14 @@ _brushG.selectAll("path.resize")
 
   }
 
+  function brushRefresh() {
+    _brushG
+      .selectAll("path.circularbrush")
+      .data(_newBrushData)
+      .attr("d", _arc)
+  }
+
+
   function extentUp() {
 
     _brushData = _newBrushData;
@@ -200,5 +250,12 @@ _brushG.selectAll("path.resize")
     _circularbrushDispatch.brushend();
   }
 
+  function updateBrushData() {
+    _brushData = [
+    {startAngle: _extent[0], endAngle: _extent[1], class: "extent"},
+    {startAngle: _extent[0] - _handleSize, endAngle:  _extent[0], class: "resize e"},
+    {startAngle: _extent[1], endAngle: _extent[1] + _handleSize, class: "resize w"}
+    ];
+  }
 
 }
