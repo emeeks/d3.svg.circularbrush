@@ -145,6 +145,9 @@ d3.svg.circularbrush = function() {
 	function resizeDown(d) {
 		var _mouse = d3.mouse(_brushG.node());
 
+		if (_brushData[0] === undefined) {
+			_brushData[0] = d;
+		}
 		_originalBrushData = {startAngle: _brushData[0].startAngle, endAngle: _brushData[0].endAngle};
 
 		_origin = _mouse;
